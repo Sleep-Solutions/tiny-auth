@@ -8,7 +8,7 @@
             [tiny-auth.validators :as validators]))
 
 (defn initiate-claim
-  [config {:keys [phone-number session-id session-language]}]
+  [config {:keys [phone-number session-id session-language agent]}]
   (f/attempt-all
    [v-phone-number (validators/phone phone-number)
     v-session-id (validators/string->uuid session-id "session-id")
@@ -31,7 +31,8 @@
             claiming-user (first create-claiming-user)
             hooks-transaction ((:initiate-claim-hooks-transaction config)
                                claiming-user
-                               v-session-language)
+                               v-session-language
+                               agent)
             token (utils/generate-token config claiming-user v-session-id)]
         {:response (ok {:success true
                         :internal-user-id (:app/uuid claiming-user)
@@ -51,7 +52,8 @@
                             v-session-id
                             v-session-language
                             snapshot
-                            nil)]
+                            nil
+                            agent)]
 
       (empty? update-code-tx)
       {:response :auth-confirm/too-many-sms
@@ -68,7 +70,7 @@
    (f/when-failed [e] (:message e))))
 
 (defn initiate-change
-  [config {:keys [user phone-number session-id]}]
+  [config {:keys [user phone-number session-id agent]}]
   (let [snapshot ((:db config) (:conn config))
         session-language (db-session/get-session-language config snapshot session-id)]
     (f/attempt-all
@@ -93,7 +95,8 @@
                               nil
                               session-language
                               snapshot
-                              (fn [user] (assoc user :user/new-phone-number v-phone-number)))
+                              (fn [user] (assoc user :user/new-phone-number v-phone-number))
+                              agent)
               same-number? (= (:user/new-phone-number user) v-phone-number)]
 
         (empty? update-code-tx)

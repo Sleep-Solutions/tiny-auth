@@ -9,7 +9,7 @@
             [tiny-auth.validators :as validators]))
 
 (defn initiate-password-reset
-  [config {:keys [phone-number language]}]
+  [config {:keys [phone-number language agent]}]
   (f/attempt-all
    [v-language (validators/language-code language)]
    (let [snapshot ((:db config) (:conn config))
@@ -20,7 +20,8 @@
                          nil
                          v-language
                          snapshot
-                         nil)]
+                         nil
+                         agent)]
      (cond
        (nil? user)
        {:response :auth-phone-number/bad-auth

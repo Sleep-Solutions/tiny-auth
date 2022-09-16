@@ -8,7 +8,7 @@
             [tiny-auth.validators :as validators]))
 
 (defn initiate-change
-  [config {:keys [phone-number user session-id]}] 
+  [config {:keys [phone-number user session-id agent]}] 
   (f/attempt-all
    [v-phone-number (validators/phone phone-number)]
    (let [snapshot ((:db config) (:conn config))
@@ -29,7 +29,8 @@
                             nil
                             session-language
                             snapshot
-                            (fn [user] (assoc user :user/new-phone-number v-phone-number)))
+                            (fn [user] (assoc user :user/new-phone-number v-phone-number))
+                            agent)
             same-number? (= (:user/new-phone-number user) v-phone-number)]
 
       (empty? update-code-tx)

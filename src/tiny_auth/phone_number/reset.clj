@@ -52,7 +52,7 @@
    (f/when-failed [e] (:message e))))
 
 (defn proceed-reset
-  [config {:keys [token phone-number language]}]
+  [config {:keys [token phone-number language agent]}]
   (f/attempt-all
    [v-language (validators/language-code language)
     v-phone-number (validators/phone phone-number)]
@@ -81,7 +81,8 @@
                             nil
                             v-language
                             snapshot
-                            (fn [user] (assoc user :user/new-phone-number v-phone-number)))]
+                            (fn [user] (assoc user :user/new-phone-number v-phone-number))
+                            agent)]
 
       (empty? update-code-tx)
       {:response :auth-confirm/too-many-sms

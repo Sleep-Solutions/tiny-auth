@@ -8,7 +8,7 @@
             [tiny-auth.validators :as validators]))
 
 (defn create-account-with-phone-number
-  [config {:keys [phone-number session-id session-language]}]
+  [config {:keys [phone-number session-id session-language agent]}]
   (let [snapshot ((:db config) (:conn config))]
     (f/attempt-all
      [v-phone-number (validators/phone phone-number)
@@ -38,7 +38,8 @@
                                v-session-id
                                v-session-language
                                snapshot
-                               nil)]
+                               nil
+                               agent)]
            {:response (ok response-existing-user)
             :transaction update-code-tx})
 
@@ -50,7 +51,8 @@
                user (first create-user)
                hooks-transaction ((:create-account-with-phone-number-hooks-transaction config)
                                   user
-                                  v-session-language) 
+                                  v-session-language
+                                  agent) 
                token (utils/generate-token config user v-session-id)]
            {:response (ok {:success true
                            :internal-user-id (:app/uuid user)
@@ -66,7 +68,7 @@
      (f/when-failed [e] (:message e)))))
 
 (defn resend-confirmation-sms
-  [config {:keys [phone-number session-language]}]
+  [config {:keys [phone-number session-language agent]}]
   (f/attempt-all
    [v-session-language (validators/language-code session-language)]
    (let [snapshot ((:db config) (:conn config))
@@ -77,7 +79,8 @@
                          nil
                          v-session-language
                          snapshot
-                         nil)]
+                         nil
+                         agent)]
      (cond
        (nil? (:app/uuid user))
        {:response :auth-confirm/bad-auth
