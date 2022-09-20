@@ -253,19 +253,21 @@
 
 
 (defn get-by-name [config snapshot username]
-  ((:q config)
-   '[:find (pull ?e [*]) .
-     :in $ ?username
-     :where
-     [?e :user/username ?username]]
-   snapshot (.toLowerCase ^String username)))
+  (ffirst
+   ((:q config)
+    '[:find (pull ?e [*])
+      :in $ ?username
+      :where
+      [?e :user/username ?username]]
+    snapshot (.toLowerCase ^String username))))
 
 (defn get-by-id [config snapshot id-keyword id]
-  ((:q config)
-   '[:find (pull ?e [*]) .
-     :in $ ?id ?id-name
-     :where [?e ?id-name ?id]]
-   snapshot id id-keyword))
+  (ffirst
+   ((:q config)
+    '[:find (pull ?e [*])
+      :in $ ?id ?id-name
+      :where [?e ?id-name ?id]]
+    snapshot id id-keyword)))
 
 (defn get-by-string-uuid [config snapshot string-uuid]
   (let [uuid (u/string->uuid string-uuid)]

@@ -44,23 +44,25 @@
 (defn get-session [config snapshot user session-id]
   (assert (uuid? session-id))
   (assert (:db/id user))
-  ((:q config)
-   '[:find (pull ?s [*]) .
-     :in $ ?session-id ?user
-     :where
-     [?user :user/sessions ?s]
-     [?s :user-session/session-id ?session-id]]
-   snapshot session-id (:db/id user)))
+  (ffirst
+   ((:q config)
+    '[:find (pull ?s [*])
+      :in $ ?session-id ?user
+      :where
+      [?user :user/sessions ?s]
+      [?s :user-session/session-id ?session-id]]
+    snapshot session-id (:db/id user))))
 
 (defn get-session-language [config snapshot session-id]
   (assert (uuid? session-id))
-  (let [session-language ((:q config)
-                          '[:find ?language .
-                            :in $ ?session
-                            :where
-                            [?s :user-session/session-id ?session]
-                            [?s :user-session/session-language ?language]]
-                          snapshot session-id)]
+  (let [session-language (ffirst
+                          ((:q config)
+                           '[:find ?language
+                             :in $ ?session
+                             :where
+                             [?s :user-session/session-id ?session]
+                             [?s :user-session/session-language ?language]]
+                           snapshot session-id))]
     (or session-language "English")))
 
 (defn update-language-transaction [session language]
