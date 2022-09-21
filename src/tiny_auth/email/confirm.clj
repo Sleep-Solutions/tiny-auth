@@ -40,7 +40,7 @@
 (defn confirm-signup-with-token
   [config {:keys [token path language]}]
   (f/attempt-all
-   [language-code (validators/language language)]
+   [language-code (validators/language-code language)]
    (try
      (let [snapshot ((:db config) (:conn config))
            {exp :exp

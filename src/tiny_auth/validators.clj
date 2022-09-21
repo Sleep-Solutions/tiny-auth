@@ -65,11 +65,6 @@
     (keyword "role" role)
     (f/fail {:response :validators/validate-role})))
 
-(defn language [target-language]
-  (if (contains? #{"en" "ar"} target-language)
-    target-language
-    (f/fail {:response :validators/language})))
-
 (defn phone [phone]
   (let [phone-info (try (phone/info phone) (catch Throwable _ nil))
         valid-phone-info? (and (:phone-number/calling-code phone-info)

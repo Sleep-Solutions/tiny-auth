@@ -4,14 +4,22 @@
             [tiny-auth.db.session :as db-session]
             [tiny-auth.utils :as utils]
             [tiny-auth.validators :as validators]
-            [failjure.core :as f]))
+            [failjure.core :as f]
+            [schema.core :as s]))
+
+(s/defschema SignupUser
+  {:email s/Str
+   :password s/Str
+   :session-id s/Str
+   :session-language s/Str
+   :additional-data s/Str})
 
 (defn signup-with-email
   [config {:keys [email password session-id session-language additional-data]}]
   (let [snapshot ((:db config) (:conn config))]
     (f/attempt-all
-     [_ (validators/user-uniqueness-email config email snapshot)
-      validated-email (validators/email config email)
+     [validated-email (validators/email config email)
+      _ (validators/user-uniqueness-email config email snapshot)
       validated-password (validators/password-strength password)
       v-session-id (validators/string->uuid session-id "session-id")
       v-session-language (validators/language-code session-language)
@@ -42,6 +50,12 @@
                       hooks-transaction
                       create-session)})
      (f/when-failed [e] (:message e)))))
+
+(s/defschema LoginUser
+  {:email s/Str
+   :password s/Str
+   :session-id s/Str
+   :session-language s/Str})
 
 (defn login-with-email
   [config {:keys [email password session-id session-language]}]

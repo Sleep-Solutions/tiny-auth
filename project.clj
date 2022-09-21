@@ -10,7 +10,8 @@
                  [clj-http "3.12.3"]
                  [clj-time "0.15.2"]
                  [metosin/ring-http-response "0.9.3"]
-                 [io.randomseed/phone-number "8.12.28-1"]]
+                 [io.randomseed/phone-number "8.12.28-1"]
+                 [prismatic/schema "1.1.12"]]
   :main ^:skip-aot tiny-auth.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all
