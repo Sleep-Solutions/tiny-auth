@@ -5,7 +5,13 @@
             [failjure.core :as f]
             [clj-time.core :as time]
             [tiny-auth.utils :as utils]
-            [tiny-auth.validators :as validators]))
+            [tiny-auth.validators :as validators]
+            [schema.core :as s]))
+
+(s/defschema InitiatePasswordResetBody
+  {:email s/Str
+   (s/optional-key :path) s/Str
+   (s/optional-key :language) s/Str})
 
 (defn initiate-password-reset
   [config {:keys [email path language]}]
@@ -38,6 +44,10 @@
          {:response :auth-password-reset-initiate/too-often
           :transaction []}))))
    (f/when-failed [e] (:message e))))
+
+(s/defschema ConfirmPasswordResetBody
+  {:password s/Str
+   (s/optional-key :language) s/Str})
 
 (defn confirm-password-reset
   [config {:keys [token password language]}]

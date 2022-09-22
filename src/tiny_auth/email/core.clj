@@ -7,12 +7,12 @@
             [failjure.core :as f]
             [schema.core :as s]))
 
-(s/defschema SignupUser
+(s/defschema SignUpBody
   {:email s/Str
    :password s/Str
    :session-id s/Str
-   :session-language s/Str
-   :additional-data s/Str})
+   (s/optional-key :session-language) s/Str
+   (s/optional-key :additional-data) s/Str})
 
 (defn signup-with-email
   [config {:keys [email password session-id session-language additional-data]}]
@@ -51,11 +51,11 @@
                       create-session)})
      (f/when-failed [e] (:message e)))))
 
-(s/defschema LoginUser
+(s/defschema LogInBody
   {:email s/Str
    :password s/Str
    :session-id s/Str
-   :session-language s/Str})
+   (s/optional-key :session-language) s/Str})
 
 (defn login-with-email
   [config {:keys [email password session-id session-language]}]
