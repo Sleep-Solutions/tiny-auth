@@ -11,8 +11,8 @@
   {:email s/Str
    :password s/Str
    :session-id s/Str
-   (s/optional-key :session-language) s/Str
-   (s/optional-key :additional-data) s/Str})
+   :session-language s/Str
+   :additional-data s/Str})
 
 (defn signup-with-email
   [config {:keys [email password session-id session-language additional-data]}]
@@ -55,7 +55,7 @@
   {:email s/Str
    :password s/Str
    :session-id s/Str
-   (s/optional-key :session-language) s/Str})
+   :session-language s/Str})
 
 (defn login-with-email
   [config {:keys [email password session-id session-language]}]

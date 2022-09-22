@@ -11,7 +11,7 @@
 (s/defschema InitiatePasswordResetBody
   {:email s/Str
    (s/optional-key :path) s/Str
-   (s/optional-key :language) s/Str})
+   :language s/Str})
 
 (defn initiate-password-reset
   [config {:keys [email path language]}]
@@ -47,7 +47,7 @@
 
 (s/defschema ConfirmPasswordResetBody
   {:password s/Str
-   (s/optional-key :language) s/Str})
+   :language s/Str})
 
 (defn confirm-password-reset
   [config {:keys [token password language]}]
@@ -57,15 +57,20 @@
    (let [snapshot ((:db config) (:conn config))
          {exp :exp
           uuid :password-recovery-user
-          password-hash :password-hash} (utils/unsign-token config token)
+          password-hash :password-hash} (try (utils/unsign-token config token)
+                                             (catch Exception _))
          ok? (time/before? (time/now) (c/from-long (* 1000 exp)))
          user (db-user/get-by-string-uuid config snapshot uuid)]
      (cond
+       (nil? uuid)
+       {:response :access-rules/missing-header
+        :transaction []}
+
        (nil? (:user/email user))
        {:response :auth-password-reset-confirm/bad-auth
         :transaction []}
 
-       (or (not ok?) 
+       (or (not ok?)
            (not= password-hash (utils/md5 (:user/password-hash user))))
        {:response :auth-password-reset-confirm/token-expired
         :transaction []}
