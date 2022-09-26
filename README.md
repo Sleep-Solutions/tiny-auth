@@ -43,22 +43,21 @@ Default config:
  :phone-numbers-with-fixed-code {}
  :default-confirm-code "1111" ;; Default code for phone-number endpoints.
  :get-update-code-fn (constantly [])
- :signup-hooks-transaction (constantly [])
- :password-reset-initiate-hooks (constantly {:success true :transaction []})
- :password-reset-confirm-hooks-transaction (constantly [])
- :confirm-hooks (constantly {:success true :transaction []})
+ :signup-hooks (constantly {:success true :transaction [] :hooks-transaction []})
+ :password-reset-initiate-hooks (constantly {:success true :transaction [] :hooks-transaction []})
+ :password-reset-confirm-hooks (constantly {:success true :transaction [] :hooks-transaction []})
+ :confirm-hooks (constantly {:success true :transaction [] :hooks-transaction []})
  :check-user-role (constantly true)
- :change-confirm-code-hooks-transaction (constantly [])
- :initiate-claim-hooks-transaction (constantly [])
- :claim-confirm-code-hooks-transaction (constantly [])
- :initiate-reset-hooks-transaction (constantly [])
- :reset-confirm-code-hooks-transaction (constantly [])
- :create-account-with-phone-number-hooks-transaction (constantly [])
- :add-email-hooks-transaction (constantly [])}
+ :change-confirm-code-hooks (constantly {:success true :transaction [] :hooks-transaction []})
+ :initiate-claim-hooks (constantly {:success true :transaction [] :hooks-transaction []})
+ :claim-confirm-code-hooks (constantly {:success true :transaction [] :hooks-transaction []})
+ :initiate-reset-hooks (constantly {:success true :transaction [] :hooks-transaction []})
+ :reset-confirm-code-hooks (constantly {:success true :transaction [] :hooks-transaction []})
+ :create-account-with-phone-number-hooks (constantly {:success true :transaction [] :hooks-transaction []})
+ :add-email-hooks (constantly {:success true :transaction [] :hooks-transaction []})}
 ```
 
-Parameter with `-hooks-transaction` suffix should be a function that returns datomic transaction. 
-Parameter with `-hooks` suffix should be a function that returns map with two fields: `success` and `transaction`. 
+Parameter with `-hooks` suffix should be a function that returns map with three fields: `success`, `transaction` and `hooks-transaction`. 
 
 ## Example
 

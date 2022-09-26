@@ -5,7 +5,8 @@
             [failjure.core :as f]
             [clj-time.core :as time] 
             [tiny-auth.utils :as utils]
-            [tiny-auth.validators :as validators]))
+            [tiny-auth.validators :as validators]
+            [schema.core :as s]))
 
 (defn confirm-with-token
   [config {:keys [token]}]
@@ -36,6 +37,11 @@
       {:response :auth-confirm-token/token-exception
        :exception e
        :transaction []})))
+
+(s/defschema ConfirmSignUpWithTokenBody
+  {:path s/Str
+   :language s/Str
+   :token s/Str})
 
 (defn confirm-signup-with-token
   [config {:keys [token path language]}]
@@ -130,18 +136,19 @@
 
        :else
        (let [code (utils/generate-confirmation-code)
-             {:keys [success transaction]} ((:confirm-hooks config) 
-                                            snapshot
-                                            user
-                                            path
-                                            code
-                                            v-language)]
-         (if (not success)
+             hooks-result ((:confirm-hooks config)
+                           snapshot
+                           user
+                           path
+                           code
+                           v-language)]
+         (if (not (:success hooks-result))
            {:response :auth-confirm/too-many
             :transaction []}
            {:response (ok {:success true})
             :transaction (concat
-                          transaction
                           [[:db/add (:db/id user) :user/confirmation-code code]]
-                          (db-user/update-last-confirmed-transaction user))}))))
+                          (db-user/update-last-confirmed-transaction user)
+                          (:transaction hooks-result))
+            :hooks-transaction (:hooks-transaction hooks-result)}))))
    (f/when-failed [e] (:message e))))

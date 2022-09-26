@@ -29,33 +29,34 @@
       (let [create-claiming-user (db-user/claiming-user-creation-transaction
                                   v-phone-number)
             claiming-user (first create-claiming-user)
-            hooks-transaction ((:initiate-claim-hooks-transaction config)
-                               claiming-user
-                               v-session-language
-                               agent)
+            hooks-result ((:initiate-claim-hooks config)
+                          claiming-user
+                          v-session-language
+                          agent)
             token (utils/generate-token config claiming-user v-session-id)]
         {:response (ok {:success true
                         :internal-user-id (:app/uuid claiming-user)
                         :access-token token})
          :transaction (concat
                        create-claiming-user
-                       hooks-transaction
+                       (:transaction hooks-result)
                        (db-session/creation-transaction
                         {:sync-status :user-session.sync-status/needs-counter-zeroing
                          :session-id v-session-id
                          :session-language v-session-language
-                         :user claiming-user}))})
+                         :user claiming-user}))
+         :hooks-transaction (:hooks-transaction hooks-result)})
 
       :let [update-code ((:get-update-code-fn config) :initiate-claim)
-            update-code-tx (update-code
-                            claiming-user
-                            v-session-id
-                            v-session-language
-                            snapshot
-                            nil
-                            agent)]
+            update-code-result (update-code
+                                claiming-user
+                                v-session-id
+                                v-session-language
+                                snapshot
+                                nil
+                                agent)]
 
-      (empty? update-code-tx)
+      (not (:success update-code-result))
       {:response :auth-confirm/too-many-sms
        :transaction []}
 
@@ -66,7 +67,8 @@
                                      config
                                      claiming-user
                                      v-session-id)})
-       :transaction update-code-tx}))
+       :transaction (:transaction update-code-result)
+       :hooks-transaction (:hooks-transaction update-code-result)}))
    (f/when-failed [e] (:message e))))
 
 (defn initiate-change
@@ -90,16 +92,16 @@
          :transaction []}
 
         :let [update-code ((:get-update-code-fn config) :initiate-claim)
-              update-code-tx (update-code
-                              user
-                              nil
-                              session-language
-                              snapshot
-                              (fn [user] (assoc user :user/new-phone-number v-phone-number))
-                              agent)
+              update-code-result (update-code
+                                  user
+                                  nil
+                                  session-language
+                                  snapshot
+                                  (fn [user] (assoc user :user/new-phone-number v-phone-number))
+                                  agent)
               same-number? (= (:user/new-phone-number user) v-phone-number)]
 
-        (empty? update-code-tx)
+        (not (:success update-code-result))
         {:response (if same-number?
                      :auth-confirm/too-many-sms
                      :auth-phone-number-change/too-frequent)
@@ -108,8 +110,9 @@
         :else
         {:response (ok {:success true})
          :transaction (concat
-                       update-code-tx
-                       (db-user/update-new-phone-number user v-phone-number))})))))
+                       (:transaction update-code-result)
+                       (db-user/update-new-phone-number user v-phone-number))
+         :hooks-transaction (:hooks-transaction update-code-result)})))))
 
 (defn confirm-code
   [config {:keys [code internal-user-id]}]
@@ -150,15 +153,16 @@
       (let [token (utils/generate-reset-phone-number-token
                    config
                    user-with-phone-number)
-            hooks-transaction ((:claim-confirm-code-hooks-transaction config)
-                               snapshot
-                               user-with-phone-number
-                               claiming-user
-                               token)]
+            hooks-result ((:claim-confirm-code-hooks config)
+                          snapshot
+                          user-with-phone-number
+                          claiming-user
+                          token)]
         {:response (ok {:success true
                         :token ""})
          :transaction (concat
                        (db-user/claim-phone-number-transaction
                         claiming-user
                         user-with-phone-number)
-                       hooks-transaction)}))))
+                       (:transaction hooks-result))
+         :hooks-transaction (:hooks-transaction hooks-result)}))))

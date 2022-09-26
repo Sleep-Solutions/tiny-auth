@@ -33,9 +33,9 @@
                          :confirmed (:confirmed v-additional-data)
                          :confirmation-code (utils/generate-confirmation-code)})
            user (first create-user)
-           hooks-transaction ((:signup-hooks-transaction config)
-                              user
-                              v-session-language)
+           hooks-result ((:signup-hooks config)
+                         user
+                         v-session-language)
            create-session (db-session/creation-transaction
                            {:sync-status :user-session.sync-status/needs-counter-zeroing
                             :session-id v-session-id
@@ -46,9 +46,10 @@
                        :internal-user-id (:app/uuid user)
                        :access-token access-token})
         :transaction (concat
-                      create-user
-                      hooks-transaction
-                      create-session)})
+                      (:transaction hooks-result)
+                      create-user 
+                      create-session)
+        :hooks-transaction (:hooks-transaction hooks-result)})
      (f/when-failed [e] (:message e)))))
 
 (s/defschema LogInBody

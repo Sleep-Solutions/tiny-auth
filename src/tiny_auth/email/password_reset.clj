@@ -30,17 +30,18 @@
 
      :else
      (let [password-token (utils/generate-password-token config user)
-           {:keys [transaction success]} ((:password-reset-initiate-hooks config)
-                                          snapshot
-                                          user
-                                          password-token
-                                          path
-                                          v-language)]
-       (if success
+           hooks-result ((:password-reset-initiate-hooks config)
+                         snapshot
+                         user
+                         password-token
+                         path
+                         v-language)]
+       (if (:success hooks-result)
          {:response (ok {:success true})
           :transaction (concat
-                        transaction
-                        (db-user/update-last-reminder-transaction user))}
+                        (db-user/update-last-reminder-transaction user)
+                        (:transaction hooks-result))
+          :hooks-transaction (:hooks-transaction hooks-result)}
          {:response :auth-password-reset-initiate/too-often
           :transaction []}))))
    (f/when-failed [e] (:message e))))
@@ -81,10 +82,10 @@
         :transaction []}
 
        :else
-       (let [hooks-transaction ((:password-reset-confirm-hooks-transaction config)
-                                user
-                                password
-                                v-language)
+       (let [hooks-result ((:password-reset-confirm-hooks config)
+                           user
+                           password
+                           v-language)
              reset-password (db-user/change-password-transaction
                              (:db/id user)
                              password)]
@@ -92,8 +93,9 @@
                          :email (:user/email user)})
           :transaction (concat
                         reset-password
-                        (db-user/update-last-reset-transaction user)
-                        hooks-transaction)})))
+                        (:transaction hooks-result)
+                        (db-user/update-last-reset-transaction user))
+          :hooks-transaction (:hooks-transaction hooks-result)})))
    (f/when-failed [e] (:message e))))
 
 (defn change-password

@@ -23,17 +23,17 @@
       {:response :validators/user-uniqueness
        :transaction []}
 
-      :let [update-code ((:get-update-code-fn config) :initiate-change) 
-            update-code-tx (update-code
-                            user
-                            nil
-                            session-language
-                            snapshot
-                            (fn [user] (assoc user :user/new-phone-number v-phone-number))
-                            agent)
+      :let [update-code ((:get-update-code-fn config) :initiate-change)
+            update-code-result (update-code
+                                user
+                                nil
+                                session-language
+                                snapshot
+                                (fn [user] (assoc user :user/new-phone-number v-phone-number))
+                                agent)
             same-number? (= (:user/new-phone-number user) v-phone-number)]
 
-      (empty? update-code-tx)
+      (not (:success update-code-result))
       {:response (if same-number?
                    :auth-confirm/too-many-sms
                    :auth-phone-number-change/too-frequent)
@@ -42,8 +42,9 @@
       :else
       {:response (ok {:success true})
        :transaction (concat
-                     update-code-tx
-                     (db-user/update-new-phone-number user v-phone-number))}))))
+                     (:transaction update-code-result)
+                     (db-user/update-new-phone-number user v-phone-number))
+       :hooks-transaction (:hooks-transaction update-code-result)}))))
 
 (defn confirm-code
   [config {:keys [user code]}]
@@ -84,8 +85,10 @@
        :transaction (db-user/failed-phone-number-change-code-transaction user)}
 
       :else
-      {:response (ok {:success true
-                      :token ""})
-       :transaction (concat
-                     (db-user/change-phone-number-transaction user)
-                     ((:change-confirm-code-hooks-transaction config) snapshot user))})))
+      (let [hooks-result ((:change-confirm-code-hooks config) snapshot user)]
+       {:response (ok {:success true
+                       :token ""})
+        :transaction (concat
+                      (db-user/change-phone-number-transaction user)
+                      (:transaction hooks-result))
+        :hooks-transaction (:hooks-transaction hooks-result)}))))

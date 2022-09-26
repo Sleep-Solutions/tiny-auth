@@ -15,13 +15,13 @@
    (let [snapshot ((:db config) (:conn config))
          user (db-user/get-by-id config snapshot :user/phone-number phone-number)
          update-code ((:get-update-code-fn config) :initiate-password-reset)
-         update-code-tx (update-code
-                         user
-                         nil
-                         v-language
-                         snapshot
-                         nil
-                         agent)]
+         update-code-result (update-code
+                             user
+                             nil
+                             v-language
+                             snapshot
+                             nil
+                             agent)]
      (cond
        (nil? user)
        {:response :auth-phone-number/bad-auth
@@ -35,13 +35,14 @@
        {:response :auth-login-phone-number/password-doesnt-exist
         :transaction []}
 
-       (empty? update-code-tx)
+       (not (:success update-code-result))
        {:response :auth-confirm/too-many-sms
         :transaction []}
 
        :else 
        {:response (ok {:success true})
-        :transaction update-code-tx}))
+        :transaction (:transaction update-code-result)
+        :hooks-transaction (:hooks-transaction update-code-result)}))
    (f/when-failed [e] (:message e))))
 
 (defn confirm-code

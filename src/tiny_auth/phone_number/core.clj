@@ -33,15 +33,16 @@
 
          (:app/uuid user)
          (let [update-code ((:get-update-code-fn config) :create-account-with-phone-number)
-               update-code-tx (update-code
-                               user
-                               v-session-id
-                               v-session-language
-                               snapshot
-                               nil
-                               agent)]
+               update-code-result (update-code
+                                   user
+                                   v-session-id
+                                   v-session-language
+                                   snapshot
+                                   nil
+                                   agent)]
            {:response (ok response-existing-user)
-            :transaction update-code-tx})
+            :transaction (:transaction update-code-result)
+            :hooks-transaction (:hooks-transaction update-code-result)})
 
          :else
          (let [code (utils/generate-phone-confirmation-code 4)
@@ -49,22 +50,23 @@
                             {:phone-number v-phone-number
                              :confirmation-code code})
                user (first create-user)
-               hooks-transaction ((:create-account-with-phone-number-hooks-transaction config)
+               hooks-result ((:create-account-with-phone-number-hooks config)
                                   user
                                   v-session-language
-                                  agent) 
+                                  agent)
                token (utils/generate-token config user v-session-id)]
            {:response (ok {:success true
                            :internal-user-id (:app/uuid user)
                            :access-token token})
             :transaction (concat
                           create-user
-                          hooks-transaction
+                          (:transaction hooks-result)
                           (db-session/creation-transaction
                            {:sync-status :user-session.sync-status/needs-counter-zeroing
                             :session-id v-session-id
                             :session-language v-session-language
-                            :user user}))})))
+                            :user user}))
+            :hooks-transaction (:hooks-transaction hooks-result)})))
      (f/when-failed [e] (:message e)))))
 
 (defn resend-confirmation-sms
@@ -74,13 +76,13 @@
    (let [snapshot ((:db config) (:conn config))
          user (db-user/get-by-id config snapshot :user/phone-number phone-number)
          update-code ((:get-update-code-fn config) :create-account-with-phone-number)
-         update-code-tx (update-code
-                         user
-                         nil
-                         v-session-language
-                         snapshot
-                         nil
-                         agent)]
+         update-code-result (update-code
+                             user
+                             nil
+                             v-session-language
+                             snapshot
+                             nil
+                             agent)]
      (cond
        (nil? (:app/uuid user))
        {:response :auth-confirm/bad-auth
@@ -90,13 +92,14 @@
        {:response :auth-confirm/already-confirmed
         :transaction []}
 
-       (empty? update-code-tx)
+       (not (:success update-code-result))
        {:response :auth-confirm/too-many-sms
         :transaction []}
 
        :else
        {:response (ok {:success true})
-        :transaction update-code-tx}))
+        :transaction (:transaction update-code-result)
+        :hooks-transaction (:hooks-transaction update-code-result)}))
    (f/when-failed [e] (:message e))))
 
 (defn add-password 
@@ -121,7 +124,7 @@
   (let [snapshot ((:db config) (:conn config))]
     (f/attempt-all
      [_ (validators/user-uniqueness-email config email snapshot)
-      v-email (validators/email config email)] 
+      v-email (validators/email config email)]
      (let [last-email-update (:user/last-email-update user)]
        (cond
          (nil? (:app/uuid user))
@@ -142,13 +145,15 @@
           :transaction []}
 
          :else
-         {:response (ok {:success true})
-          :transaction (concat
-                        (db-user/update-email-transaction user v-email)
-                        ((:add-email-hooks-transaction config)
-                         snapshot
-                         user
-                         v-email))}))
+         (let [hooks-result ((:add-email-hooks config)
+                             snapshot
+                             user
+                             v-email)]
+           {:response (ok {:success true})
+            :transaction (concat
+                          (db-user/update-email-transaction user v-email)
+                          (:transaction hooks-result))
+            :hooks-transaction (:hooks-transaction hooks-result)})))
      (f/when-failed [e]
                     (read-string (:message e))))))
 

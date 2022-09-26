@@ -40,15 +40,16 @@
 
        :else
        (let [token (utils/generate-reset-phone-number-token config user)
-             hooks-transaction ((:initiate-reset-hooks-transaction config)
-                                user
-                                token
-                                path
-                                v-language)]
+             hooks-result ((:initiate-reset-hooks config)
+                           user
+                           token
+                           path
+                           v-language)]
          {:response (ok {:success true})
           :transaction (concat
                         (db-user/update-last-phone-number-reset-email-transaction user)
-                        hooks-transaction)})))
+                        (:transaction hooks-result))
+          :hooks-transaction (:hooks-transaction hooks-result)})))
    (f/when-failed [e] (:message e))))
 
 (defn proceed-reset
@@ -76,23 +77,24 @@
        :transaction []}
 
       :let [update-code ((:get-update-code-fn config) :proceed-reset)
-            update-code-tx (update-code
-                            user
-                            nil
-                            v-language
-                            snapshot
-                            (fn [user] (assoc user :user/new-phone-number v-phone-number))
-                            agent)]
+            update-code-result (update-code
+                                user
+                                nil
+                                v-language
+                                snapshot
+                                (fn [user] (assoc user :user/new-phone-number v-phone-number))
+                                agent)]
 
-      (empty? update-code-tx)
+      (not (:success update-code-result))
       {:response :auth-confirm/too-many-sms
        :transaction []}
 
       :else
       {:response (ok {:success true})
        :transaction (concat
-                     update-code-tx
-                     (db-user/update-new-phone-number user v-phone-number))}))
+                     (:transaction update-code-result)
+                     (db-user/update-new-phone-number user v-phone-number))
+       :hooks-transaction (:hooks-transaction update-code-result)}))
    (f/when-failed [e] (:message e))))
 
 (defn confirm-code 
@@ -125,14 +127,16 @@
         :transaction (db-user/failed-phone-number-reset-code-transaction user)}
 
        :else
-       {:response (ok {:success true
-                       :internal-user-id (:app/uuid user)
-                       :token (utils/generate-token config user v-session-id)})
-        :transaction (concat
-                      (db-user/update-reseting-user-transaction user)
-                      ((:reset-confirm-code-hooks-transaction config) snapshot user)
-                      (db-session/creation-transaction
-                       {:sync-status :user-session.sync-status/needs-counter-zeroing
-                        :session-id v-session-id
-                        :session-language v-session-language
-                        :user user}))}))))
+       (let [hooks-result ((:reset-confirm-code-hooks config) snapshot user)]
+         {:response (ok {:success true
+                         :internal-user-id (:app/uuid user)
+                         :token (utils/generate-token config user v-session-id)})
+          :transaction (concat
+                        (db-user/update-reseting-user-transaction user)
+                        (:transaction hooks-result)
+                        (db-session/creation-transaction
+                         {:sync-status :user-session.sync-status/needs-counter-zeroing
+                          :session-id v-session-id
+                          :session-language v-session-language
+                          :user user}))
+          :hooks-transaction (:hooks-transaction hooks-result)})))))
