@@ -34,7 +34,7 @@
         :transaction []}
 
        (and last-reset-email
-            (not (utils/check-phone-number-reset-email-frequency last-reset-email)))
+            (not (utils/check-phone-number-reset-email-frequency config last-reset-email)))
        {:response :auth-confirm/too-many
         :transaction []}
 
