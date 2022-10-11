@@ -154,8 +154,7 @@
                           (db-user/update-email-transaction user v-email)
                           (:transaction hooks-result))
             :hooks-transaction (:hooks-transaction hooks-result)})))
-     (f/when-failed [e]
-                    (read-string (:message e))))))
+     (f/when-failed [e] (:message e)))))
 
 (defn login-with-phone-number
   [config {:keys [phone-number password session-id session-language]}]
