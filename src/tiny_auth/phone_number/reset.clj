@@ -126,6 +126,10 @@
        {:response :auth-confirm-code/bad-code
         :transaction (db-user/failed-phone-number-reset-code-transaction user)}
 
+       (-> user :user/new-phone-number nil?)
+       {:response :auth-confirm-code/already-confirmed
+        :transaction []}
+
        :else
        (let [hooks-result ((:reset-confirm-code-hooks config) snapshot user)]
          {:response (ok {:success true
