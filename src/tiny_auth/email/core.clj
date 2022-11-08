@@ -89,7 +89,7 @@
        {:response :auth-login-email/claimed-user
         :transaction []}
 
-       (:user/confirmed user)
+       (or (:dont-check-if-confirmed-in-login config) (:user/confirmed user))
        (let [existing-session (db-session/get-session
                                config
                                snapshot
