@@ -11,7 +11,7 @@ Where transaction is a Datomic transaction and response is a map (ready `200 OK`
 
 Leiningen coordinates:
 ```clojure
-[tiny-auth/tiny-auth "0.1.10"]
+[tiny-auth/tiny-auth "0.1.11"]
 ```
 
 In order to use `tiny-auth`, you have to add a similar line to `project.clj`:
@@ -41,6 +41,7 @@ Default config:
  :login-delay (* 5 60) ; 5 minutes
  :reset-delay (* 5 60) ; 5 minutes
  :application-bundle-ids #{} ;; Only for login-with-apple.
+ :accept-all-codes false
  :phone-numbers-with-fixed-code {}
  :default-confirm-code "1111" ;; Default code for phone-number endpoints.
  :get-update-code-fn (constantly [])
