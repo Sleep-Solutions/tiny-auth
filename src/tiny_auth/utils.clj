@@ -225,4 +225,5 @@
                        (get fixed-phone-numbers phone-number))]
     (and code
          (or (= code correct-code)
-             (= code fixed-code)))))
+             (= code fixed-code)
+             (:accept-all-codes config)))))
