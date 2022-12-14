@@ -192,13 +192,20 @@
         :transaction []}
 
        :else
-       {:response (ok (db-user/login-success-response config snapshot user v-session-id))
-        :transaction (concat
-                      (db-user/login-transaction user)
-                      (session-transaction
-                       {:snapshot snapshot
-                        :config config
-                        :session-id v-session-id
-                        :user user
-                        :session-language v-session-language}))}))
+       (let [custom-log-in-data (when-let [get-custom-log-in-data (:get-custom-log-in-data config)]
+                                  (get-custom-log-in-data snapshot user))
+             log-in-response (db-user/login-success-response
+                              config
+                              snapshot
+                              user
+                              v-session-id)]
+         {:response (ok (merge log-in-response custom-log-in-data))
+          :transaction (concat
+                        (db-user/login-transaction user)
+                        (session-transaction
+                         {:snapshot snapshot
+                          :config config
+                          :session-id v-session-id
+                          :user user
+                          :session-language v-session-language}))})))
    (f/when-failed [e] (:message e))))
