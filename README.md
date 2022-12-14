@@ -46,6 +46,7 @@ Default config:
  :default-confirm-code "1111" ;; Default code for phone-number endpoints.
  :get-update-code-fn (constantly [])
  :signup-hooks (constantly {:success true :transaction [] :hooks-transaction []})
+ :get-custom-log-in-data (constantly {:custom-user-data-key "custom-user-data-value})
  :password-reset-initiate-hooks (constantly {:success true :transaction [] :hooks-transaction []})
  :password-reset-confirm-hooks (constantly {:success true :transaction [] :hooks-transaction []})
  :confirm-hooks (constantly {:success true :transaction [] :hooks-transaction []})

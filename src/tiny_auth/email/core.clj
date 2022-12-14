@@ -105,12 +105,15 @@
                                     existing-session
                                     v-session-language))
              final-transaction (concat session-transaction
-                                       (db-user/login-transaction user))]
-         {:response (ok (db-user/login-success-response 
-                         config 
-                         snapshot 
-                         user 
-                         v-session-id))
+                                       (db-user/login-transaction user))
+             custom-log-in-data (when-let [get-custom-log-in-data (:get-custom-log-in-data config)]
+                                  (get-custom-log-in-data snapshot user))
+             log-in-response (db-user/login-success-response
+                              config
+                              snapshot
+                              user
+                              v-session-id)]
+         {:response (ok (merge log-in-response custom-log-in-data))
           :transaction final-transaction})
 
        :else
