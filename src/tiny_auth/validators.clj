@@ -48,11 +48,18 @@
                :title [field-name]
                :message [max-size-in-bytes]}))))
 
-(defn json-string [txt]
-  (try
-    (read-str txt :key-fn keyword)
-    (catch Exception _
-      (f/fail {:response :validators/json-string}))))
+(defn json-string
+  "If a string is not an empty one, checks if it is a valid stringified JSON and returns the string itself.
+   In case of an empty string, returns stringified empty JSON - \"{}\"."
+  [^String txt]
+  (let [empty-json-string "{}"]
+    (if (seq txt)
+      (try
+        (read-str txt :key-fn keyword)
+        txt
+        (catch Exception _
+          (f/fail {:response :validators/json-string})))
+      empty-json-string)))
 
 (defn user-from-string-uuid [config string-uuid snapshot]
   (let [user (db-user/get-by-string-uuid config snapshot string-uuid)]
