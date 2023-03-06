@@ -28,7 +28,7 @@
      (let [create-user (db-user/creation-transaction
                         {:email validated-email
                          :password validated-password
-                         :additional-data additional-data
+                         :additional-data v-additional-data
                          ; TODO: czy to powinno tak działać?
                          :confirmed (:confirmed v-additional-data)
                          :confirmation-code (utils/generate-confirmation-code)})
