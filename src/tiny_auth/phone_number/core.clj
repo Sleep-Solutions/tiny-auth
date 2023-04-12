@@ -8,12 +8,14 @@
             [tiny-auth.validators :as validators]))
 
 (defn create-account-with-phone-number
-  [config {:keys [phone-number session-id session-language agent]}]
+  [config {:keys [phone-number session-id session-language agent additional-data]}]
   (let [snapshot ((:db config) (:conn config))]
     (f/attempt-all
      [v-phone-number (validators/phone phone-number)
       v-session-id (validators/string->uuid session-id "session-id")
-      v-session-language (validators/language-code session-language)]
+      v-session-language (validators/language-code session-language)
+      _ (validators/string-size additional-data 1024 "additional-data")
+      v-additional-data (validators/json-string additional-data)]
      (let [user (db-user/get-by-id config snapshot :user/phone-number phone-number)
            response-existing-user {:success true
                                    :internal-user-id (:app/uuid user)
@@ -48,7 +50,8 @@
          (let [code (utils/generate-phone-confirmation-code 4)
                create-user (db-user/creation-transaction
                             {:phone-number v-phone-number
-                             :confirmation-code code})
+                             :confirmation-code code
+                             :additional-data v-additional-data})
                user (first create-user)
                hooks-result ((:create-account-with-phone-number-hooks config)
                                   user
