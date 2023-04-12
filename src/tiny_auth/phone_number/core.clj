@@ -9,7 +9,8 @@
 
 (defn create-account-with-phone-number
   [config {:keys [phone-number session-id session-language agent additional-data]}]
-  (let [snapshot ((:db config) (:conn config))]
+  (let [snapshot ((:db config) (:conn config))
+        additional-data (or additional-data "")]
     (f/attempt-all
      [v-phone-number (validators/phone phone-number)
       v-session-id (validators/string->uuid session-id "session-id")
