@@ -1,5 +1,6 @@
 (ns tiny-auth.email.core
   (:require [ring.util.http-response :refer [ok]]
+            [clojure.data.json :refer [read-str]]
             [tiny-auth.db.user :as db-user]
             [tiny-auth.db.session :as db-session]
             [tiny-auth.utils :as utils]
@@ -25,12 +26,15 @@
       v-session-language (validators/language-code session-language)
       _ (validators/string-size additional-data 1024 "additional-data")
       v-additional-data (validators/json-string additional-data)]
-     (let [create-user (db-user/creation-transaction
+     (let [;; TODO: improve this, it can be dangerous.
+           confirmed? (-> v-additional-data
+                          (read-str :key-fn keyword)
+                          :confirmed)
+           create-user (db-user/creation-transaction
                         {:email validated-email
                          :password validated-password
                          :additional-data v-additional-data
-                         ; TODO: czy to powinno tak działać?
-                         :confirmed (:confirmed v-additional-data)
+                         :confirmed confirmed?
                          :confirmation-code (utils/generate-confirmation-code)})
            user (first create-user)
            hooks-result ((:signup-hooks config)
@@ -47,7 +51,7 @@
                        :access-token access-token})
         :transaction (concat
                       (:transaction hooks-result)
-                      create-user 
+                      create-user
                       create-session)
         :hooks-transaction (:hooks-transaction hooks-result)})
      (f/when-failed [e] (:message e)))))
