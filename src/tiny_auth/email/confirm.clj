@@ -82,42 +82,50 @@
    (f/when-failed [e] (:message e))))
 
 (defn confirm-with-code
-  [config {:keys [code internal-user-id]}]
-  (try
-    (let [snapshot ((:db config) (:conn config))
-          user (db-user/get-by-string-uuid config snapshot internal-user-id) 
-          confirmation-date (:user/last-confirmation user)
-          db-code (:user/confirmation-code user)
-          ok? (and user
-                   db-code
-                   (or (nil? confirmation-date)
-                       (time/before? (time/now)
-                                     (time/plus (utils/from-database-date confirmation-date)
-                                                (time/seconds (eval (:confirmation-token-expiry config)))))))]
-      (cond
-        (not (utils/check-confirmation-code-frequency config user))
-        {:response :auth-confirm-code/too-many-failures
-         :transaction []}
+  [config {:keys [code internal-user-id session-id]}]
+  (f/attempt-all [v-session-id (validators/string->uuid (or session-id (str (java.util.UUID/randomUUID))) "session-id")]
+   (try
+     (let [snapshot ((:db config) (:conn config))
+           user (db-user/get-by-string-uuid config snapshot internal-user-id) 
+           confirmation-date (:user/last-confirmation user)
+           db-code (:user/confirmation-code user)
+           ok? (and user
+                    db-code
+                    (or (nil? confirmation-date)
+                        (time/before? (time/now)
+                                      (time/plus (utils/from-database-date confirmation-date)
+                                                 (time/seconds (eval (:confirmation-token-expiry config)))))))]
+       (cond
+         (not (utils/check-confirmation-code-frequency config user))
+         {:response :auth-confirm-code/too-many-failures
+          :transaction []}
 
-        (not ok?)
-        {:response :auth-confirm-code/code-expired
-         :transaction []}
+         (not ok?)
+         {:response :auth-confirm-code/code-expired
+          :transaction []}
 
-        (:user/confirmed user)
-        {:response :auth-confirm-code/already-confirmed
-         :transaction []}
+         (:user/confirmed user)
+         {:response :auth-confirm-code/already-confirmed
+          :transaction []}
 
-        (utils/correct-code? config (:user/phone-number user) code db-code)
-        {:response (ok {:success true})
-         :transaction [[:db/add (:db/id user) :user/confirmed true]
-                       [:db/add (:db/id user) :user/failed-confirmations-count 0]]}
+         (utils/correct-code? config (:user/phone-number user) code db-code)
+         (let [custom-log-in-data (when-let [get-custom-log-in-data (:get-custom-log-in-data config)]
+                                    (get-custom-log-in-data snapshot user))
+               log-in-response (db-user/login-success-response
+                                config
+                                snapshot
+                                user
+                                v-session-id)]
+           {:response (ok (merge log-in-response custom-log-in-data))
+            :transaction [[:db/add (:db/id user) :user/confirmed true]
+                          [:db/add (:db/id user) :user/failed-confirmations-count 0]]})
 
-        :else
-        {:response :auth-confirm-code/bad-code
-         :transaction []}))
-    (catch Throwable _
-      {:response :auth-confirm-code/bad-code
-       :transaction []})))
+         :else
+         {:response :auth-confirm-code/bad-code
+          :transaction []}))
+     (catch Throwable _
+       {:response :auth-confirm-code/bad-code
+        :transaction []}))))
 
 (defn confirm
   [config {:keys [email path language]}]
