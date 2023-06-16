@@ -1,7 +1,9 @@
 (ns tiny-auth.db.user
   (:require [clojure.data.json :refer [read-str]]
             [tiny-auth.db.core :as db]
-            [tiny-auth.utils :as u]))
+            [tiny-auth.utils :as u]
+            [tiny-auth.validators :as validators]
+            [failjure.core :as f]))
 
 (def user-schema
   [{:db/ident              :user/username
@@ -274,7 +276,8 @@
     ((:pull config) snapshot '[*] [:app/uuid uuid])))
 
 (defn creation-transaction
-  [{:keys
+  [config
+   {:keys
     [facebook-id
      email
      password
@@ -284,21 +287,27 @@
      confirmation-code
      additional-data
      phone-number]}]
-  (let [username (or email facebook-id twitch-id google-id phone-number)
-        base-user {:user/username (.toLowerCase ^String username)
-                   :user/role :role/user
-                   :user/deactivated false}]
-    (-> base-user
-        (#(if facebook-id (merge % {:user/facebook-id facebook-id}) %))
-        (#(if twitch-id (merge % {:user/twitch-id twitch-id}) %))
-        (#(if google-id (merge % {:user/google-id google-id}) %))
-        (#(if email (merge % {:user/email (.toLowerCase ^String email)}) %))
-        (#(if confirmed (merge % {:user/confirmed confirmed}) %))
-        (#(if password (merge % {:user/password-hash (u/encrypt-password password)}) %))
-        (#(if confirmation-code (merge % {:user/confirmation-code confirmation-code}) %))
-        (#(if additional-data (merge % {:user/additional-data additional-data}) %))
-        (#(if phone-number (merge % {:user/phone-number phone-number}) %))
-        db/create-entity-transaction)))
+  (f/attempt-all
+   [snapshot ((:db config) (:conn config))
+    validated-email (validators/email config email)
+    _ (validators/user-uniqueness-email config email snapshot)
+    validated-password (validators/password-strength password)
+    v-additional-data (validators/json-string additional-data)]
+   (let [username (or validated-email facebook-id twitch-id google-id phone-number)
+         base-user {:user/username (.toLowerCase ^String username)
+                    :user/role :role/user
+                    :user/deactivated false}]
+     (-> base-user
+         (#(if facebook-id (merge % {:user/facebook-id facebook-id}) %))
+         (#(if twitch-id (merge % {:user/twitch-id twitch-id}) %))
+         (#(if google-id (merge % {:user/google-id google-id}) %))
+         (#(if email (merge % {:user/email (.toLowerCase ^String email)}) %))
+         (#(if confirmed (merge % {:user/confirmed confirmed}) %))
+         (#(if password (merge % {:user/password-hash (u/encrypt-password validated-password)}) %))
+         (#(if confirmation-code (merge % {:user/confirmation-code confirmation-code}) %))
+         (#(if additional-data (merge % {:user/additional-data v-additional-data}) %))
+         (#(if phone-number (merge % {:user/phone-number phone-number}) %))
+         db/create-entity-transaction))))
 
 (defn- claiming-username [phone-number]
   (str "claim-" phone-number))
