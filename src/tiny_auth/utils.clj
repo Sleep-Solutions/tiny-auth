@@ -126,6 +126,15 @@
         jwt-private-key (-> config :secrets :jwt-private-key)]
     (jwt/sign claims jwt-private-key {:alg :es512})))
 
+(defn generate-universal-token
+  [config extra-claims expiry-in-seconds]
+  (let [claims
+        (merge {:exp (time/plus
+                     (time/now)
+                     (time/seconds expiry-in-seconds))} extra-claims)
+        jwt-private-key (-> config :secrets :jwt-private-key)]
+    (jwt/sign claims jwt-private-key {:alg :es512})))
+
 (defn unsign-token
   [config token]
   (jwt/unsign token (-> config :secrets :jwt-public-key) {:alg :es512
