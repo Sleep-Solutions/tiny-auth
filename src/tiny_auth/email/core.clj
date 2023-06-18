@@ -31,7 +31,6 @@
                           (read-str :key-fn keyword)
                           :confirmed)
            create-user (db-user/creation-transaction
-                        config
                         {:email validated-email
                          :password validated-password
                          :additional-data v-additional-data
