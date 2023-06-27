@@ -115,10 +115,15 @@
                                 config
                                 snapshot
                                 user
-                                v-session-id)]
+                                v-session-id)
+               create-session-tx (db-session/creation-transaction
+                                  {:sync-status :user-session.sync-status/needs-counter-zeroing
+                                   :session-id v-session-id
+                                   :session-language "en"
+                                   :user user})]
            {:response (ok (merge log-in-response custom-log-in-data))
-            :transaction [[:db/add (:db/id user) :user/confirmed true]
-                          [:db/add (:db/id user) :user/failed-confirmations-count 0]]})
+            :transaction (concat create-session-tx [[:db/add (:db/id user) :user/confirmed true]
+                                                    [:db/add (:db/id user) :user/failed-confirmations-count 0]])})
 
          :else
          {:response :auth-confirm-code/bad-code
