@@ -5,6 +5,7 @@
             [failjure.core :as f]
             [clj-time.core :as time] 
             [tiny-auth.utils :as utils]
+            [tiny-auth.db.session :as db-session]
             [tiny-auth.validators :as validators]
             [schema.core :as s]))
 
