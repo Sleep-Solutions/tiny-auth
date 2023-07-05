@@ -120,7 +120,7 @@
                create-session-tx (db-session/creation-transaction
                                   {:sync-status :user-session.sync-status/needs-counter-zeroing
                                    :session-id v-session-id
-                                   :session-language "en"
+                                   :session-language "English"
                                    :user user})]
            {:response (ok (merge log-in-response custom-log-in-data))
             :transaction (concat create-session-tx [[:db/add (:db/id user) :user/confirmed true]
