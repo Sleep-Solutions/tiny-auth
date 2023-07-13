@@ -76,7 +76,7 @@
   (let [phone-info (try (phone/info phone) (catch Throwable _ nil))
         valid-phone-info? (and (:phone-number/calling-code phone-info)
                                (:phone-number/valid? phone-info))
-        valid-phone-number? (re-matches #"^\+[1-9][0-9]{2,3}[0-9]{5,12}$" phone)]
+        valid-phone-number? (re-matches #"^\+[1-9][0-9]{2,3}[0-9]{6,12}$" phone)]
     (if (and valid-phone-info?
              valid-phone-number?)
       phone
