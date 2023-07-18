@@ -36,17 +36,8 @@
           :transaction []}
 
          (:app/uuid user)
-         (let [update-code ((:get-update-code-fn config) :create-account-with-phone-number)
-               update-code-result (update-code
-                                   user
-                                   v-session-id
-                                   v-session-language
-                                   snapshot
-                                   nil
-                                   agent)]
-           {:response (ok response-existing-user)
-            :transaction (:transaction update-code-result)
-            :hooks-transaction (:hooks-transaction update-code-result)})
+         {:response (ok response-existing-user)
+          :transaction []}
 
          :else
          (let [code (utils/generate-phone-confirmation-code 4)
