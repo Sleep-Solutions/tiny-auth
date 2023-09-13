@@ -123,9 +123,11 @@
                                    :session-language "English"
                                    :user user})]
            {:response (ok (merge log-in-response custom-log-in-data))
-            :transaction (concat create-session-tx [[:db/add (:db/id user) :user/confirmed true]
-                                                    [:db/add (:db/id user) :user/failed-confirmations-count 0]])})
-
+            :transaction (concat create-session-tx 
+                                 [[:db/add (:db/id user) :user/confirmed true]
+                                  [:db/add (:db/id user) :user/failed-confirmations-count 0]]
+                                  (if (and (:temporary-user-email config) (not (:user/email user)))
+                                    [[:db/cas (:db/id user) :user/email nil (:temporary-user-email config)]] []))})         
          :else
          {:response :auth-confirm-code/bad-code
           :transaction []}))

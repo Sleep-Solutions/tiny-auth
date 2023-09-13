@@ -1,7 +1,7 @@
-(defproject tiny-auth "0.1.26"
+(defproject tiny-auth "0.1.27"
   :description "Authentication/authorization module."
   :url "https://github.com/spinneyio/tiny-auth"
-  :dependencies [[org.clojure/clojure "1.10.3"]
+  :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/data.json "1.0.0"]
                  [org.clojure/data.codec "0.1.1"]
                  [com.walmartlabs/cond-let "1.0.0"]
