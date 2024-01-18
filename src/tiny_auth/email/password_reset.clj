@@ -27,6 +27,10 @@
      (not (:user/confirmed user))
      {:response :auth-password-reset-initiate/not-confirmed
       :transaction []}
+     
+     (not (:user/password-hash user))
+     {:response :auth-password-reset-initiate/missing-password
+      :transaction []}
 
      :else
      (let [password-token (utils/generate-password-token config user)
