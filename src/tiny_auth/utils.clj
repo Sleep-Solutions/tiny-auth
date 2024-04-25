@@ -148,7 +148,8 @@
           failed-count (failed-count-field user)]
       (or (not last-failed)
           (not failed-count)
-          (< failed-count 3)
+          ;; 3 for backwards compatibility
+          (< failed-count (or (eval (:delay-trigger-count config)) 3)
           (>=
            (time/in-seconds (time/interval last-failed (time/now)))
            (eval (env-delay-field config)))))))
