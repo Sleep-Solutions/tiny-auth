@@ -16,7 +16,7 @@
 (defn initiate-password-reset
   [config {:keys [email path language]}]
   (f/attempt-all
-   [v-language (validators/language-code language)]
+   [v-language (validators/language-code config language)]
    (let [snapshot ((:db config) (:conn config))
          user (db-user/get-by-id config snapshot :user/email email)]
    (cond
@@ -58,7 +58,7 @@
   [config {:keys [token password language]}]
   (f/attempt-all
    [_ (validators/password-strength password)
-    v-language (validators/language-code language)]
+    v-language (validators/language-code config language)]
    (let [snapshot ((:db config) (:conn config))
          {exp :exp
           uuid :password-recovery-user

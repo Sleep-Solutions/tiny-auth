@@ -23,7 +23,7 @@
       _ (validators/user-uniqueness-email config email snapshot)
       validated-password (validators/password-strength password)
       v-session-id (validators/string->uuid session-id "session-id")
-      v-session-language (validators/language-code session-language)
+      v-session-language (validators/language-code config session-language)
       _ (validators/string-size additional-data 1024 "additional-data")
       v-additional-data (validators/json-string additional-data)]
      (let [;; TODO: improve this, it can be dangerous.
@@ -66,7 +66,7 @@
   [config {:keys [email password session-id session-language]}]
   (f/attempt-all
    [v-session-id (validators/string->uuid session-id "session-id")
-    v-session-language (validators/language-code session-language)]
+    v-session-language (validators/language-code config session-language)]
    (let [snapshot ((:db config) (:conn config))
          user (db-user/get-by-id config snapshot :user/email email)]
      (cond

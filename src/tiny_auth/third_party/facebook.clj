@@ -13,7 +13,7 @@
   [config {:keys [facebook-user facebook-token session-id session-language]}]
   (f/attempt-all
    [v-session-id (validators/string->uuid session-id "session-id")
-    v-session-language (validators/language-code session-language)]
+    v-session-language (validators/language-code config session-language)]
    (let [snapshot ((:db config) (:conn config))
          response-from-user (fn [user]
                               (db-user/login-success-response

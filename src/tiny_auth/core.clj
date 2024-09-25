@@ -14,7 +14,7 @@
 
 (defn change-language [config {:keys [session-language session-id user]}]
   (f/attempt-all
-   [v-session-language (validators/language-code session-language)]
+   [v-session-language (validators/language-code config session-language)]
    (let [snapshot ((:db config) (:conn config))
          session (db-session/get-session config snapshot user session-id)]
      {:response (ok {:success true})

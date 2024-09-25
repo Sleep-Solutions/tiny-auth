@@ -12,7 +12,7 @@
 (defn initiate-reset
   [config {:keys [email path language]}]
   (f/attempt-all
-   [v-language (validators/language-code language)]
+   [v-language (validators/language-code config language)]
    (let [snapshot ((:db config) (:conn config))
          user (db-user/get-by-id config snapshot :user/email email)
          last-reset-email (:user/last-phone-number-reset-email user)]
@@ -55,7 +55,7 @@
 (defn proceed-reset
   [config {:keys [token phone-number language agent]}]
   (f/attempt-all
-   [v-language (validators/language-code language)
+   [v-language (validators/language-code config language)
     v-phone-number (validators/phone phone-number)]
    (let [{exp :exp
           uuid :phone-number-reset-user} (utils/unsign-token config token)
@@ -101,7 +101,7 @@
   [config {:keys [token code session-id session-language]}]
   (f/attempt-all
    [v-session-id (validators/string->uuid session-id "session-id")
-    v-session-language (validators/language-code session-language)]
+    v-session-language (validators/language-code config session-language)]
    (let [snapshot ((:db config) (:conn config))
          user-uuid (->> token (utils/unsign-token config) :phone-number-reset-user)
          user (db-user/get-by-string-uuid config snapshot user-uuid)

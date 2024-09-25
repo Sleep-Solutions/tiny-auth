@@ -47,7 +47,7 @@
 (defn confirm-signup-with-token
   [config {:keys [token path language]}]
   (f/attempt-all
-   [language-code (validators/language-code language)]
+   [language-code (validators/language-code config language)]
    (try
      (let [snapshot ((:db config) (:conn config))
            {exp :exp
@@ -138,7 +138,7 @@
 (defn confirm
   [config {:keys [email path language]}]
   (f/attempt-all
-   [v-language (validators/language-code language)]
+   [v-language (validators/language-code config language)]
    (let [snapshot ((:db config) (:conn config))
          user (db-user/get-by-id config snapshot :user/email email)]
      (cond
