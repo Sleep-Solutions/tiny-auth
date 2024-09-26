@@ -12,7 +12,7 @@
   (f/attempt-all
    [v-phone-number (validators/phone phone-number)
     v-session-id (validators/string->uuid session-id "session-id")
-    v-session-language (validators/language-code session-language)]
+    v-session-language (validators/language-code config session-language)]
    (let [snapshot ((:db config) (:conn config))
          user-with-phone-number (db-user/get-by-id
                                  config

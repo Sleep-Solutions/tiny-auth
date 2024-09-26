@@ -6,9 +6,6 @@
             [phone-number.core :as phone]
             [clj-time.core :as time]))
 
-(def code-to-language {"en" "English"
-                       "ar" "Arabic"})
-
 (defn string->uuid [str-uuid field-name]
   (try
     (if (uuid? str-uuid) str-uuid
@@ -20,8 +17,8 @@
        {:response :validators/string->uuid
         :title [field-name]}))))
 
-(defn language-code [language-code]
-  (or (get code-to-language language-code)
+(defn language-code [config language-code]
+  (or (get (:session-languages config) language-code)
       (f/fail {:response :validators/language-code})))
 
 (defn email [config raw-email]

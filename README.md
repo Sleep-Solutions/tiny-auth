@@ -11,7 +11,7 @@ Where transaction is a Datomic transaction and response is a map (ready `200 OK`
 
 Leiningen coordinates:
 ```clojure
-[tiny-auth/tiny-auth "0.1.28"]
+[tiny-auth/tiny-auth "0.1.31"]
 ```
 
 In order to use `tiny-auth`, you have to add a similar line to `project.clj`:
@@ -34,10 +34,12 @@ Default config:
  :secrets {:jwt-public-key "your-jwt-public-key" 
            :jwt-private-key "your-jwt-private-key"}
  :email-regex "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b"
+ :session-languages {"en" "English" ;; map: lowercase ISO code -> full name
+                     "ar" "Arabic"}
  :token-expiry (* 14 24 3600) ; 14 days
  :password-token-expiry (* 2 3600) ; 2 hours 
  :confirmation-token-expiry (* 2 3600) ; 2 hours
- :dont-check-if-confirmed-in-login false 
+ :dont-check-if-confirmed-in-login false
  :login-delay (* 5 60) ; 5 minutes
  :reset-delay (* 5 60) ; 5 minutes
  :application-bundle-ids #{} ;; Only for login-with-apple.

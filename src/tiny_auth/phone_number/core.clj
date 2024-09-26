@@ -14,7 +14,7 @@
     (f/attempt-all
      [v-phone-number (validators/phone phone-number)
       v-session-id (validators/string->uuid session-id "session-id")
-      v-session-language (validators/language-code session-language)
+      v-session-language (validators/language-code config session-language)
       _ (validators/string-size additional-data 1024 "additional-data")
       v-additional-data (validators/json-string additional-data)
       v-password (if password (validators/password-strength password))]
@@ -69,7 +69,7 @@
 (defn resend-confirmation-sms
   [config {:keys [phone-number session-language agent]}]
   (f/attempt-all
-   [v-session-language (validators/language-code session-language)]
+   [v-session-language (validators/language-code config session-language)]
    (let [snapshot ((:db config) (:conn config))
          user (db-user/get-by-id config snapshot :user/phone-number phone-number)
          update-code ((:get-update-code-fn config) :create-account-with-phone-number)
@@ -157,7 +157,7 @@
   [config {:keys [phone-number password session-id session-language]}]
   (f/attempt-all
    [v-session-id (validators/string->uuid session-id "session-id")
-    v-session-language (validators/language-code session-language)]
+    v-session-language (validators/language-code config session-language)]
    (let [snapshot ((:db config) (:conn config))
          user (db-user/get-by-id config snapshot :user/phone-number phone-number)]
      (cond

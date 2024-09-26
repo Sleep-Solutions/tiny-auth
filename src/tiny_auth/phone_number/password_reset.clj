@@ -11,7 +11,7 @@
 (defn initiate-password-reset
   [config {:keys [phone-number language agent]}]
   (f/attempt-all
-   [v-language (validators/language-code language)]
+   [v-language (validators/language-code config language)]
    (let [snapshot ((:db config) (:conn config))
          user (db-user/get-by-id config snapshot :user/phone-number phone-number)
          update-code ((:get-update-code-fn config) :initiate-password-reset)
@@ -79,7 +79,7 @@
   (f/attempt-all
    [_ (validators/password-strength password)
     v-session-id (validators/string->uuid session-id "session-id")
-    v-session-language (validators/language-code session-language)]
+    v-session-language (validators/language-code config session-language)]
    (let [{exp :exp
           uuid :password-recovery-user
           password-hash :password-hash} (utils/unsign-token config token)

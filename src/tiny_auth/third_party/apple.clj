@@ -23,7 +23,7 @@
         email (:email payload)]
     (f/attempt-all
      [v-session-id (validators/string->uuid session-id "session-id")
-      v-session-language (validators/language-code session-language)
+      v-session-language (validators/language-code config session-language)
       v-payload (utils/validate-token config jwt-token header)
       _ (validators/exp (:exp v-payload))
       _ (validators/iss (:iss v-payload))
