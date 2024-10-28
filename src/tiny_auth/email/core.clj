@@ -13,10 +13,11 @@
    :password s/Str
    :session-id s/Str
    :session-language s/Str
-   :additional-data s/Str})
+   :additional-data s/Str
+   (s/optional-key :path) s/Str})
 
 (defn signup-with-email
-  [config {:keys [email password session-id session-language additional-data]}]
+  [config {:keys [email password session-id session-language additional-data path]}]
   (let [snapshot ((:db config) (:conn config))]
     (f/attempt-all
      [validated-email (validators/email config email)
@@ -39,7 +40,8 @@
            user (first create-user)
            hooks-result ((:signup-hooks config)
                          user
-                         v-session-language)
+                         v-session-language
+                         path)
            create-session (db-session/creation-transaction
                            {:sync-status :user-session.sync-status/needs-counter-zeroing
                             :session-id v-session-id
