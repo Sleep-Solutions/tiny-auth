@@ -39,9 +39,8 @@
                          :confirmation-code (utils/generate-confirmation-code)})
            user (first create-user)
            hooks-result ((:signup-hooks config)
-                         user
-                         v-session-language
-                         path)
+                         (assoc user :path path)
+                         v-session-language)
            create-session (db-session/creation-transaction
                            {:sync-status :user-session.sync-status/needs-counter-zeroing
                             :session-id v-session-id
