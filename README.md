@@ -11,7 +11,7 @@ Where transaction is a Datomic transaction and response is a map (ready `200 OK`
 
 Leiningen coordinates:
 ```clojure
-[tiny-auth/tiny-auth "0.1.31"]
+[tiny-auth/tiny-auth "0.1.32"]
 ```
 
 In order to use `tiny-auth`, you have to add a similar line to `project.clj`:
