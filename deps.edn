@@ -1,0 +1,20 @@
+{:description "Authentication/authorization module."
+ :paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        org.clojure/data.json {:mvn/version "1.0.0"}
+        org.clojure/data.codec {:mvn/version "0.1.1"}
+        com.walmartlabs/cond-let {:mvn/version "1.0.0"}
+        buddy/buddy {:mvn/version "2.0.0"}
+        failjure/failjure {:mvn/version "2.2.0"}
+        clj-http/clj-http {:mvn/version "3.12.3"}
+        clj-time/clj-time {:mvn/version "0.15.2"}
+        metosin/ring-http-response {:mvn/version "0.9.3"}
+        io.randomseed/phone-number {:mvn/version "8.12.28-1"}
+        prismatic/schema {:mvn/version "1.1.12"}}
+ :aliases {:test {:extra-paths ["test"]}
+           :uberjar {:replace-deps {com.github.seancorfield/depstar {:mvn/version "2.1.303"}}
+                     :exec-fn hf.depstar/uberjar
+                     :exec-args {:aot true
+                                 :jar "target/tiny-auth.jar"
+                                 :main-class "tiny-auth.core"
+                                 :sync-pom true}}}}
